@@ -24,8 +24,9 @@ import stripemetrics
 
 Getting Subscription data from stripe:
 ```python
-get_data(Subscription, api_key='YOUR_STRIPE_KEY')
+get_data('Subscription', api_key='YOUR_STRIPE_KEY')
 ```
+Pick one resource from Subscription, Product, Charge, etc
 
 ## Contributing
 
