@@ -1,6 +1,7 @@
 import pandas as pd
 from datetime import datetime
 import calendar
+import time
 
 
 date_columns_names = {'billing_cycle_anchor', 'cancel_at', 'canceled_at', 'created', 'current_period_end',
@@ -70,3 +71,11 @@ def _to_end_month(date):
     last = _last_day_month(date)
 
     return last - date.day
+
+
+def _month_to_date(date):
+    date = pd.Timestamp(date)
+    start = date.replace(day=datetime.min.day)
+    end = date
+
+    return start, _max_hours(end)

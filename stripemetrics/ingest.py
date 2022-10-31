@@ -1,18 +1,19 @@
 import stripe
 import pandas as pd
 import numpy as np
-from stripemetrics.date_manipulation import date_columns_names
+from date_manipulation import *
 from types import FunctionType
+import config
 
 
 def get_data(
-    resource: str,
-    api_key: str,
-    start_date: str = None,
-    end_date: str = None,
-    date_hour_type: FunctionType = None,
-    api_version: str = None,
-    **kwargs
+        resource: str,
+        api_key: str,
+        api_version: str = config.stripe_api_version,
+        start_date: str = None,
+        end_date: str = None,
+        date_hour_type: FunctionType = None,
+        **kwargs
 ) -> pd.DataFrame:
     """
     Get a certain resource from stripe api, returns it as a pandas DataFrame.
@@ -43,9 +44,13 @@ def get_data(
     if api_version:
         stripe.api_version = api_version
     if start_date:
-        start_date = int(pd.Timestamp(start_date))
+        start_date = int(time.mktime(
+            pd.Timestamp(start_date).timetuple())
+        )
     if end_date:
-        end_date = int(pd.Timestamp(start_date))
+        end_date = int(time.mktime(
+            pd.Timestamp(end_date).timetuple())
+        )
 
     resource_list = getattr(stripe, resource).list(limit=100, created={"gte": start_date, "lt": end_date}, **kwargs)
     lst = [resource for resource in resource_list.auto_paging_iter()]
