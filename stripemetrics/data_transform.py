@@ -1,5 +1,5 @@
 import pandas as pd
-from date_manipulation import _last_interval_days
+from .date_manipulation import _last_interval_days
 import numpy as np
 
 

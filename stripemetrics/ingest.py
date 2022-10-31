@@ -1,15 +1,15 @@
 import stripe
 import pandas as pd
 import numpy as np
-from date_manipulation import *
 from types import FunctionType
-import config
+from .date_manipulation import *
+from .config import stripe_api_version
 
 
 def get_data(
         resource: str,
         api_key: str,
-        api_version: str = config.stripe_api_version,
+        api_version: str = stripe_api_version,
         start_date: str = None,
         end_date: str = None,
         date_hour_type: FunctionType = None,
