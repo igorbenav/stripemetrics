@@ -16,7 +16,7 @@ def get_data(
         **kwargs
 ) -> pd.DataFrame:
     """
-    Get a certain resource from stripe api, returns it as a pandas DataFrame.
+    Get a certain resource from stripe api, return it as a pandas DataFrame.
 
     Parameters
     ----------
@@ -37,7 +37,7 @@ def get_data(
     Returns
     -------
     pd.DataFrame
-        Pandas DataFrame with the request stripe data
+        Pandas DataFrame with the requested stripe data
     """
     stripe.api_key = api_key
 

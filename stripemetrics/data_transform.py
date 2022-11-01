@@ -3,9 +3,34 @@ from .date_manipulation import _last_interval_days
 import numpy as np
 
 
-def enrich_subscriptions(sub_df, prod_df=None):
+def enrich_subscriptions(
+        sub_df: pd.DataFrame,
+        prod_df: pd.DataFrame or None = None
+) -> pd.DataFrame:
+    """
+    Extract plan and coupon information from Subscription DataFrame.
+    If Product DataFrame is provided, also enrich the resulting DataFrame with product information.
+
+    Plan Information:
+        plan_amount, plan_interval, product
+    Coupon Information:
+        percent_off, duration
+    Product Information
+        name
+
+    Parameters
+    ----------
+    sub_df : DataFrame
+        Stripe Subscription DataFrame
+    prod_df : DataFrame or None, default None
+        Stripe Product DataFrame
+
+    Returns
+    -------
+    pd.DataFrame
+        Subscription Pandas DataFrame enriched with more information
+    """
     subs_enriched = sub_df.copy()
-    # added as an emergency measure
     subs_enriched = subs_enriched[~subs_enriched['plan'].isna()]
 
     subs_enriched['plan_amount'] = subs_enriched['plan'].map(lambda x: x['amount'])
@@ -25,7 +50,33 @@ def enrich_subscriptions(sub_df, prod_df=None):
     return subs_enriched
 
 
-def enrich_charges(ch_df, prod_df, balance_df):
+def enrich_charges(
+        ch_df: pd.DataFrame,
+        prod_df: pd.DataFrame,
+        balance_df: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Enrich Charge DataFrame with Product and Balance Transaction information.
+
+    Product Information:
+        product_key, name
+    Balance Information:
+        currency, exchange_rate, source, type
+
+    Parameters
+    ----------
+    ch_df : pd.DataFrame
+        Stripe Charge DataFrame
+    prod_df : pd.DataFrame
+        Stripe Product DataFrame
+    balance_df : pd.DataFrame
+        Stripe Balance Transaction Information
+
+    Returns
+    -------
+    pd.DataFrame
+        Charge Pandas DataFrame enriched with Product and Balance Transaction information
+    """
     charges_enriched = ch_df.copy()
     charges_enriched['product_key'] = charges_enriched.apply(
         lambda x: x['metadata']['product_key'] if 'product_key' in x['metadata'].keys() is not None else np.nan, axis=1).astype('category')
@@ -43,7 +94,32 @@ def enrich_charges(ch_df, prod_df, balance_df):
     return charges_enriched
 
 
-def active_subscriptions(sub_df, date, product=None, interval=30):
+def active_subscriptions(
+        sub_df: pd.DataFrame,
+        date: str,
+        product: str or None = None,
+        interval: int = 30
+) -> pd.Series:
+    """
+    Get id of active subscriptions in the last interval (default 30) days starting from date ('YYYY/MM/DD').
+    If product name is provided, filter subscriptions by product (Subscription must be enriched with product data).
+
+    Parameters
+    ----------
+    sub_df : pd.DataFrame
+        Stripe Subscription DataFrame
+    date : str
+        A date of format 'YYYY/MM/DD'
+    product : str or None, default None
+        Name of a Stripe product
+    interval : int, default 30
+        Amount of days in the past to check
+
+    Returns
+    -------
+    pd.Series
+        Pandas Series containing the ids of active subscriptions
+    """
     # if product is not None, enrich_subscriptions is needed
     date = pd.Timestamp(date)
     next_date = date + pd.Timedelta(days=interval)
@@ -62,7 +138,32 @@ def active_subscriptions(sub_df, date, product=None, interval=30):
     return active_subs['id']
 
 
-def active_subscribers(sub_df, date, product=None, interval=30):
+def active_subscribers(
+        sub_df: pd.DataFrame,
+        date: str,
+        product: str or None = None,
+        interval: int = 30
+) -> pd.Series:
+    """
+    Get id of active subscribers in the last interval (default 30) days starting from date ('YYYY/MM/DD').
+    If product name is provided, filter subscribers by product (Subscription must be enriched with product data).
+
+    Parameters
+    ----------
+    sub_df : pd.DataFrame
+        Stripe Subscription DataFrame
+    date : str
+        A date of format 'YYYY/MM/DD'
+    product : str or None, default None
+        Name of a Stripe product
+    interval : int, default 30
+        Amount of days in the past to check
+
+    Returns
+    -------
+    pd.Series
+        Pandas Series containing the ids of active subscribers
+    """
     # if product is not None, enrich_subscriptions is needed
     subscriptions = active_subscriptions(sub_df, date, product, interval)
     df = sub_df.copy()
@@ -73,9 +174,34 @@ def active_subscribers(sub_df, date, product=None, interval=30):
     return pd.Series(unique_subs)
 
 
-def new_subscribers(sub_df, date, product=None):
+def new_subscribers(
+        sub_df: pd.DataFrame,
+        date: str,
+        product: str or None = None,
+        interval: int = 30
+) -> pd.Series:
+    """
+    Get id of new subscribers in the last interval (default 30) days starting from date ('YYYY/MM/DD').
+    If product name is provided, filter subscribers by product (Subscription must be enriched with product data).
+
+    Parameters
+    ----------
+    sub_df : pd.DataFrame
+        Stripe Subscription DataFrame
+    date : str
+        A date of format 'YYYY/MM/DD'
+    product : str or None, default None
+        Name of a Stripe product
+    interval : int, default 30
+        Amount of days in the past to check
+
+    Returns
+    -------
+    pd.Series
+        Pandas Series containing the ids of new subscribers
+    """
     df = sub_df.copy()
-    date, last_date = _last_interval_days(date)
+    date, last_date = _last_interval_days(date, interval)
 
     if product:
         # enrich_subscriptions is needed
@@ -92,9 +218,34 @@ def new_subscribers(sub_df, date, product=None):
     return pd.Series(list(cur - prev), dtype=pd.StringDtype())
 
 
-def new_subscriptions(sub_df, date, product=None):
+def new_subscriptions(
+        sub_df: pd.DataFrame,
+        date: str,
+        product: str or None = None,
+        interval: int = 30
+):
+    """
+    Get id of new subscriptions in the last interval (default 30) days starting from date ('YYYY/MM/DD').
+    If product name is provided, filter subscriptions by product (Subscription must be enriched with product data).
+
+    Parameters
+    ----------
+    sub_df : pd.DataFrame
+        Stripe Subscription DataFrame
+    date : str
+        A date of format 'YYYY/MM/DD'
+    product : str or None, default None
+        Name of a Stripe product
+    interval : int, default 30
+        Amount of days in the past to check
+
+    Returns
+    -------
+    pd.Series
+        Pandas Series containing the ids of new subscriptions
+    """
     # if product is not None, enrich_subscriptions is needed
-    date, last_date = _last_interval_days(date)
+    date, last_date = _last_interval_days(date, interval)
 
     prev_active_subscriptions = active_subscriptions(sub_df, last_date, product)
     cur_active_subscriptions = active_subscriptions(sub_df, date, product)
@@ -106,10 +257,38 @@ def new_subscriptions(sub_df, date, product=None):
     return pd.Series(list(cur - prev), dtype=pd.StringDtype())
 
 
-def churn_dates(sub_df, date=None, product=None):
+def churn_dates(
+        sub_df: pd.DataFrame,
+        date: str or None = None,
+        product: str or None = None,
+        interval: int = 30
+) -> pd.DataFrame:
+    """
+    Get the churn date for subscribers that canceled in the last interval (default 30) days, return a DataFrame
+    containing dates and ids.
+
+    The parameter for date narrows the date interval to check.
+    If product name is provided, filters subscriptions by product (Subscription must be enriched with product data).
+
+    Parameters
+    ----------
+    sub_df : pd.DataFrame
+        Stripe Subscription DataFrame
+    date : str
+        A date of format 'YYYY/MM/DD'
+    product : str or None, default None
+        Name of a Stripe product
+    interval : int, default 30
+        Amount of days in the past to check
+
+    Returns
+    -------
+    pd.DataFrame
+        dataframe with subscriber ids and their respective churn dates
+    """
     df = sub_df.copy()
     if date is not None:
-        date, last_date = _last_interval_days(date)
+        date, last_date = _last_interval_days(date, interval)
         df = df[(df['canceled_at'] > last_date) &
                 (df['canceled_at'] < date)]
 
@@ -134,10 +313,38 @@ def churn_dates(sub_df, date=None, product=None):
     return customer_churn_dates
 
 
-def subscription_churn_dates(sub_df, date=None, product=None):
+def subscription_churn_dates(
+        sub_df: pd.DataFrame,
+        date: str or None = None,
+        product: str or None = None,
+        interval: int = 30
+) -> pd.DataFrame:
+    """
+    Get the churn date for subscriptions that canceled in the last interval (default 30) days, return a DataFrame
+    containing dates and ids.
+
+    The parameter for date narrows the date interval to check.
+    If product name is provided, filter subscriptions by product (Subscription must be enriched with product data).
+
+    Parameters
+    ----------
+    sub_df : pd.DataFrame
+        Stripe Subscription DataFrame
+    date : str
+        A date of format 'YYYY/MM/DD'
+    product : str or None, default None
+        Name of a Stripe product
+    interval : int, default 30
+        Amount of days in the past to check
+
+    Returns
+    -------
+    pd.DataFrame
+        dataframe with subscription ids and their respective churn dates
+    """
     df = sub_df.copy()
     if date is not None:
-        date, last_date = _last_interval_days(date)
+        date, last_date = _last_interval_days(date, interval)
         df = df[(df['canceled_at'] > last_date) &
                 (df['canceled_at'] < date)]
 
@@ -162,9 +369,34 @@ def subscription_churn_dates(sub_df, date=None, product=None):
     return subscription_churn_dates
 
 
-def churned_customers(sub_df, date, product=None):
+def churned_customers(
+        sub_df: pd.DataFrame,
+        date: str,
+        product: str or None = None,
+        interval: int = 30
+):
+    """
+    Get the subscribers that churned in the last interval (default 30) days from date ('YYYY/MM/DD').
+    If product name is provided, filter subscriptions by product (Subscription must be enriched with product data).
+
+    Parameters
+    ----------
+    sub_df : pd.DataFrame
+        Stripe Subscription DataFrame
+    date : str
+        A date of format 'YYYY/MM/DD'
+    product : str or None, default None
+        Name of a Stripe product
+    interval : int, default 30
+        Amount of days in the past to check
+
+    Returns
+    -------
+    pd.Series
+        Pandas Series containing the ids of churned subscribers
+    """
     # if product is not None, enrich_subscriptions is needed
-    date, last_date = _last_interval_days(date)
+    date, last_date = _last_interval_days(date, interval)
 
     customer_churn_dates = churn_dates(sub_df, date, product)
     last_month_churned_customers = pd.Series([], dtype=pd.StringDtype())
@@ -175,9 +407,34 @@ def churned_customers(sub_df, date, product=None):
     return last_month_churned_customers
 
 
-def churned_subscriptions(sub_df, date, product=None):
+def churned_subscriptions(
+        sub_df: pd.DataFrame,
+        date: str,
+        product: str or None = None,
+        interval: int = 30
+):
+    """
+    Get the subscriptions that churned in the last interval (default 30) days from date ('YYYY/MM/DD').
+    If product name is provided, filter subscriptions by product (Subscription must be enriched with product data).
+
+    Parameters
+    ----------
+    sub_df : pd.DataFrame
+        Stripe Subscription DataFrame
+    date : str
+        A date of format 'YYYY/MM/DD'
+    product : str or None, default None
+        Name of a Stripe product
+    interval : int, default 30
+        Amount of days in the past to check
+
+    Returns
+    -------
+    pd.Series
+        Pandas Series containing the ids of churned subscriptions
+    """
     # if product is not None, enrich_subscriptions is needed
-    date, last_date = _last_interval_days(date)
+    date, last_date = _last_interval_days(date, interval)
 
     cur_active = active_subscriptions(sub_df, date, product)
     prev_active = active_subscriptions(sub_df, last_date, product)
