@@ -1,6 +1,9 @@
-# stripemetrics
+# stripemetrics 
 ___
->Compute metrics using stripe data and python
+> Compute metrics using stripe data and python 
+
+> **Warning**
+> This is still under development
 
 ## What is stripemetrics?
 
@@ -27,6 +30,33 @@ Getting Subscription data from stripe:
 get_data('Subscription', status='all', api_key='YOUR_STRIPE_KEY')
 ```
 Pick one resource from Subscription, Product, Charge, etc
+
+### Base Metrics:
+- active_subscriptions
+- active_subscribers
+- new_subscribers
+- new_subscriptions
+- churn_dates
+- subscription_churn_dates
+- subscription_churn_dates
+- churned_subscriptions
+
+### Charge Metrics:
+- total_revenue
+- total_refunded
+- total_refunds
+
+### Subscription Metrics:
+- total_mrr
+- revenue_per_subscriber
+- mrr_per_customer
+- churned_subscribers_rate
+- subscribers_retention_rate
+- churned_subscriptions_rate
+- subscription_retention_rate
+
+> **Note**
+> Some of the metrics mentioned need data enrichment (usually when using product filters), that is provided with the enrich_subscriptions and enrich_charges functions.
 
 ## Contributing
 
